@@ -1,3 +1,5 @@
+import gc
+
 import xlsxwriter
 import json
 import numpy as np
@@ -6,6 +8,7 @@ import os
 import math
 import os.path
 from os import path
+import matplotlib.pyplot as plt
 
 
 def distributionStatistic(x, y, b, m):
@@ -38,22 +41,18 @@ def distributionStatistic(x, y, b, m):
 
 
 def kill_points(x, y, b, m):
-    passBucketX = []
     passBucketY = []
-    killBucketX = []
     killBucketY = []
 
     count = 0
-    while (count < len(x)):
-        kill_line =  b + m * x[count]
+    while (count < len(y)):
+        kill_line =  b + (m * x[count])
         if y[count] >= kill_line:
-            killBucketX.append(x[count])
             killBucketY.append(y[count])
         else:
-            passBucketX.append(x[count])
             passBucketY.append(y[count])
         count = count + 1
-    passToKillBucket = [passBucketX, passBucketY, killBucketX, killBucketY]
+    passToKillBucket = [ passBucketY,  killBucketY]
 
     return passToKillBucket
 
@@ -99,11 +98,12 @@ def RunFitLine(xy, testName, Flagmulticore,sigma):
             b_sigma = b + (RMSE) * float(sigma)
             selcted_sigma = RMSE
             sigma_Val_Offset = (RMSE) * float(sigma)
-
-
+        #print(len(y))
         passToKillBucket = kill_points(x, y, b_sigma, m)
-        killBucketY = passToKillBucket[3]
+
+        killBucketY = passToKillBucket[1]
         killToPassRatio = len(killBucketY)
+
 
     else:
         Empty = []
@@ -117,6 +117,9 @@ def RunFitLine(xy, testName, Flagmulticore,sigma):
         b_sigma = 0
 
     equation = [b_sigma, m, stats, RMSE, killToPassRatio, sigma_Val_Offset,b,selcted_sigma]
+
+    del x, y
+    gc.collect()
     return equation
 
 
@@ -192,7 +195,7 @@ def GetGraphName(dir,key):
     return file_name
 
 def DiePerWaferCount(out_Path, kills):
-    dpw = kills/82
+    dpw = kills/1
     wafersList = out_Path +'/WaferList.txt'
 
     if path.isfile(wafersList):
@@ -217,7 +220,7 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count):
         xyMulticore = []
         for val in tests['Data']:
             IDVName = val['XName']
-            if (float(val['YValue']) > 0 and float(val['YValue']) < 1.0):
+            if (float(val['YValue']) > 0):
                 x.append(float(val['XValue']))
                 y.append(float(val['YValue']))
             if fullName != val['YName']:
@@ -243,7 +246,7 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count):
             DPW = DiePerWaferCount(out_Path,res['KillRate'])
             rowData = ['',res['SourceTestName'],'','', res['Slope'],intercept_0Multi, res['Intercept'], DPW,
                        res['RootMeanSquareError'],multicoreeqations[core][7],int(sigma),multicoreeqations[core][5], str(res['PopulationStatistics']), ' ',' ', 'MultiCore']
-            if (res['Slope'] != 0 and res['Intercept'] != 0):
+            if ( res['Intercept'] != 0):
                 worksheet.write_row(count, 0, rowData)
                 count = count + 1
             coreResults.append(res)
@@ -291,7 +294,7 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count):
 
         rowData1 = [moduleName ,result1['SourceTestName'],frequency,flow, result1['Slope'],intercept_0, result1['Intercept'], DPW,
                     result1['RootMeanSquareError'],selcted_sigma,int(sigma),Sigma_offset, str(result1['PopulationStatistics']), ' ',' ', 'MainCore']
-        if (result1['Slope']!=0 and result1['Intercept']!=0):
+        if (result1['Intercept']!=0):
             worksheet.write_row(count, 0, rowData1)
             graphLinq=GetGraphName(resultdir, result1['SourceTestName'])
             worksheet.write_url(count,16,graphLinq)
@@ -317,7 +320,7 @@ def main(args1, args2, args3):
 
     datafiles = os.listdir(path)
     with open(outPath, 'w') as file:
-        header = ['Module Name','TestName', 'Frequency', 'Flow', 'Slope', 'Intercept_0', 'Intercept', 'No. Of Kills',
+        header = ['Module Name','TestName', 'Frequency', 'Flow', 'Slope', 'Intercept_0', 'Intercept', 'DPW',
                   'RootMeanSquareError', 'Selected Sigma', 'Sigma Multiple', 'Calculated_Offset ',
                   'PopulationStatistics', 'Approval', 'Comment', 'MultiCore/MainCore',
                   'Graph']
@@ -325,6 +328,7 @@ def main(args1, args2, args3):
         file.write("[")
         count = 1
         for datafile in datafiles:
+            print(datafile)
             filepath = os.path.join(path, datafile)
             count = FitLineFactory(filepath, file, worksheet, out_Path, sigma, count)
             print(count)

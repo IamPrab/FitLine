@@ -28,6 +28,7 @@ def GetGraphs(MasterData,outPath,sigma):
         x = np.array(MasterData[key][0])
         y = np.array(MasterData[key][1])
         if (len(x)>10):
+
             b, m = polyfit(x, y, 1)
             if m > 0:
                 m = 0
@@ -46,36 +47,35 @@ def GetGraphs(MasterData,outPath,sigma):
 
             if (RMSE <= 0.015):
                 sigma_Val = 0.015 * float(sigma)
-            elif (RMSE > 0.015 and RMSE < 0.025):
+            elif (RMSE > 0.015 and RMSE <= 0.025):
                 sigma_Val = (0.02) * float(sigma)
-            elif (RMSE >= 0.025):
+            elif (RMSE > 0.025):
                 sigma_Val = (RMSE) * float(sigma)
 
             kill_offset = sigma_Val + b
             label1 = 'Sigma '+ str(sigma)
             plt.plot(x, kill_offset + m * x, 'c-', label=label1)
 
+
             sigma0 = 8
 
             if (RMSE <= 0.015):
                 sigma_Val = 0.015 * float(sigma0)
-            elif (RMSE > 0.015 and RMSE < 0.025):
+            elif (RMSE > 0.015 and RMSE <= 0.025):
                 sigma_Val = (0.02) * float(sigma0)
-            elif (RMSE >= 0.025):
+            elif (RMSE > 0.025):
                 sigma_Val = (RMSE) * float(sigma0)
 
             kill_offset = sigma_Val + b
             plt.plot(x, kill_offset + m * x, 'r-', label="Sigma 8")
 
-
-
             sigma1 = 12
 
             if (RMSE <= 0.015):
                 sigma_Val1 = 0.015 * float(sigma1)
-            elif (RMSE > 0.015 and RMSE < 0.025):
+            elif (RMSE > 0.015 and RMSE <= 0.025):
                 sigma_Val1 = (0.02) * float(sigma1)
-            elif (RMSE >= 0.025):
+            elif (RMSE > 0.025):
                 sigma_Val1 = (RMSE) * float(sigma1)
 
             kill_offset= sigma_Val1 + b
@@ -121,6 +121,8 @@ def main(args1, args2, args3):
 
     datafiles = os.listdir(path)
     for datafile in datafiles:
+       # print(datafile)
+        print(datafile)
         filepath = os.path.join(path, datafile)
         MasterData=ReadData(filepath)
         GetGraphs(MasterData,out_Path,sigma)
