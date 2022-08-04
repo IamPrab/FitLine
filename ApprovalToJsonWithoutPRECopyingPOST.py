@@ -62,6 +62,7 @@ def AllTestInstances(datajson):
 
 
 def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
+    c=0
 
     for i in dataJson:
         SourceTestName = i['SourceTestName']
@@ -96,19 +97,21 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
                 resulant.write(json_string)
                 resulant.write(',')
                 dataApproval[SourceTestName] = [True, "Values Passed"]
+                c=c+1
 
 
     for key in dataApproval:
         if dataApproval[key][0]!=True and dataApproval[key][1]!= "Values Passed" :
             Approval =  dataApproval[key][5]
             if Approval == 'Y' or Approval == 'Yes' or Approval == 'yes' or Approval == 'y':
-                print('Equation missing in json')
+                print('Equation missing in json', key)
+    print(c)
 
 
 if __name__ == '__main__':
-    csvAprrovalFile = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\RPL_8PRO_RPL282\\8PROC_90F\\8Sigma\\8ApprovalFile_aviad.xlsx"
-    jsonequationFile = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\RPL_8PRO_RPL282\\8PROC_90F\\8Sigma\\ADTL_Equations.adtl.json"
-    FinalJson = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\RPL_8PRO_RPL282\\8PROC_90F\\8Sigma\\AfterApproval_ADTL_Equations.adtl.json"
+    csvAprrovalFile = "C:\\Users\\kaurp\\Downloads\\exp.xlsx"
+    jsonequationFile = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\RPL_8PQF_RPL8161\\QS_New_Algorithm\\ADTL_Equations_Final.adtl.json"
+    FinalJson = "C:\\Users\\kaurp\\Downloads\\AfterApprovalfileJson.xlsx"
 
     dataApproval= ReadcsvData(csvAprrovalFile)
     dataJson = ReadjsonData(jsonequationFile)

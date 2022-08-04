@@ -121,7 +121,6 @@ def main(args1, args2, args3):
 
     datafiles = os.listdir(path)
     for datafile in datafiles:
-       # print(datafile)
         print(datafile)
         filepath = os.path.join(path, datafile)
         MasterData=ReadData(filepath)

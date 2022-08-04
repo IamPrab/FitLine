@@ -32,7 +32,7 @@ def ReadcsvData(csvAprrovalFile):
         else:
             print(data['TestName'][count])
             print(dict_data[data['TestName'][count]])
-            print("double Equation" )
+            print("double Equation ^^")
         count = count + 1
     # print(count)
     # print(len(dict_data))
@@ -79,7 +79,7 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
             RootMeanSquareErrorA= float(dataApproval[SourceTestName][4])
             Approval = dataApproval[SourceTestName][5]
 
-            if Approval=='Y' or Approval=='Yes' or Approval == 'yes' or Approval=='y':
+            if Approval=='Y' or Approval=='Yes' or Approval == 'yes' or Approval=='y' or Approval=='YES':
                 c = c+1
                 result1 = {"ResultVarName": i['ResultVarName'],
                             "PerDomainEquations": i['PerDomainEquations'],
@@ -130,6 +130,7 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
                         resulant.write(',')
                     else:
                         print(SourceTestName)
+                        print("PRE POST missing^")
 
 
     for key in dataApproval:
@@ -144,9 +145,9 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
 
 
 if __name__ == '__main__':
-    csvAprrovalFile = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\RPL_8PRO_RPL282\\8PROC_90F\\8Sigma\\8ApprovalFile_aviad.xlsx"
-    jsonequationFile = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\RPL_8PRO_RPL282\\8PROC_90F\\8Sigma\\ADTL_Equations.adtl.json"
-    FinalJson = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\RPL_8PRO_RPL282\\8PROC_90F\\8Sigma\\AfterApproval_ADTL_Equations.adtl.json"
+    csvAprrovalFile = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\ADL_8PQK_ADL081\\8PQK_61A\\ApprovalFile.xlsx"
+    jsonequationFile = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\ADL_8PQK_ADL081\\8PQK_61A\\Debug_ADTL_Equations.adtl.json"
+    FinalJson = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\ADL_8PQK_ADL081\\8PQK_61A\\AfterApproval_ADTL_Equations.adtl.json"
 
     dataApproval= ReadcsvData(csvAprrovalFile)
     dataJson = ReadjsonData(jsonequationFile)
