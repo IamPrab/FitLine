@@ -1,6 +1,7 @@
 import json
 import os
-
+import argparse
+import yaml
 import pandas as pd
 
 class ApprovalData:
@@ -19,7 +20,7 @@ def ReadcsvData(csvAprrovalFile):
 
     excel_data = pd.read_excel(csvAprrovalFile)
     dict_data={}
-    data = pd.DataFrame(excel_data, columns=['TestName', 'Flow', 'Slope', 'Intercept','Sigma Multiple','RootMeanSquareError','Approval'])
+    data = pd.DataFrame(excel_data, columns=['TestName', 'Flow', 'Slope', 'Intercept','Sigma Multiple','RootMeanSquareError','Approval', 'MultiCore/MainCore'])
     length = (len (data['TestName']))
     count = 0
     #print(length)
@@ -27,7 +28,7 @@ def ReadcsvData(csvAprrovalFile):
         if data['TestName'][count] not in dict_data:
             stuff = [ data['Flow'][count], float(data['Slope'][count]),
                               float(data['Intercept'][count]), data['Sigma Multiple'][count],
-                              float(data['RootMeanSquareError'][count]), data['Approval'][count]]
+                              float(data['RootMeanSquareError'][count]), data['Approval'][count], data['MultiCore/MainCore'][count]]
             dict_data[data['TestName'][count]] = stuff
         else:
             print(data['TestName'][count])
@@ -61,9 +62,8 @@ def AllTestInstances(datajson):
 
 
 
-def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
-    c=0
-    t=0
+def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances, logFile, Copy_Pre_To_Post):
+    Approved=0
     post=0
     pre=0
 
@@ -71,7 +71,7 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
         SourceTestName = i['SourceTestName']
 
         if SourceTestName in dataApproval:
-            t=t+1
+
             Flow = dataApproval[SourceTestName][0]
             SlopeA =  float(dataApproval[SourceTestName][1])
             InterceptA = float(dataApproval[SourceTestName][2])
@@ -79,8 +79,8 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
             RootMeanSquareErrorA= float(dataApproval[SourceTestName][4])
             Approval = dataApproval[SourceTestName][5]
 
-            if Approval=='Y' or Approval=='Yes' or Approval == 'yes' or Approval=='y' or Approval=='YES':
-                c = c+1
+            if (Approval=='Y' or Approval=='Yes' or Approval == 'yes' or Approval=='y' or Approval=='YES'):
+                Approved = Approved+1
                 result1 = {"ResultVarName": i['ResultVarName'],
                             "PerDomainEquations": i['PerDomainEquations'],
                             "EquaionName": i["EquaionName"],
@@ -103,7 +103,7 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
                 resulant.write(',')
                 dataApproval[SourceTestName] = [True, "Values Passed"]
 
-                if Flow == "PREHVQK":
+                if Flow == "PREHVQK" and Copy_Pre_To_Post == True :
                     pre=pre+1
                     postInstance = SourceTestName.replace("PREHVQK", "POSTHVQK")
                     if postInstance in allTestInstances:
@@ -130,32 +130,56 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
                         resulant.write(',')
                     else:
                         print(SourceTestName)
+                        logFile.write("\n Missing POST Instance for \n")
+                        logFile.write(SourceTestName)
                         print("PRE POST missing^")
 
 
+
     for key in dataApproval:
-        if dataApproval[key][0]!=True and dataApproval[key][1]!= "Values Passed" :
+        if dataApproval[key][0]!=True and dataApproval[key][1]!= "Values Passed" and dataApproval[key][6]=="MainCore":
             Approval =  dataApproval[key][5]
-            if Approval == 'Y' or Approval == 'Yes' or Approval == 'yes' or Approval == 'y':
-                print('Equatiion missing in json')
-    print(c)
-    print(t)
-    print(post)
-    print(pre)
+            if Approval=='Y' or Approval=='Yes' or Approval == 'yes' or Approval=='y' or Approval=='YES':
+                #print('Equatiion missing in json')
+                #print(key)
+                logFile.write("\nEquatiion missing in json : " + str(key) + '\n')
+
+    #print(Approved)
+    logFile.write("\nApproved Equations  : "+ str(Approved) +'\n')
+    #print(post)
+    logFile.write("Post Instances In Case you are Copying POST : " + str(post) + '\n')
+    #print(pre)
+    logFile.write("Pre Instances In Case you are Copying POST : " + str(pre) + '\n')
 
 
 if __name__ == '__main__':
-    csvAprrovalFile = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\ADL_8PQK_ADL081\\8PQK_61A\\ApprovalFile.xlsx"
-    jsonequationFile = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\ADL_8PQK_ADL081\\8PQK_61A\\Debug_ADTL_Equations.adtl.json"
-    FinalJson = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\ADL_8PQK_ADL081\\8PQK_61A\\AfterApproval_ADTL_Equations.adtl.json"
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('ymlFile', help="YML_FILE")
+
+    args = parser.parse_args()
+
+    inputs = args.ymlFile
+
+    with open(inputs) as file:
+        ymlInputs=yaml.load(file,Loader=yaml.FullLoader)
+
+    csvAprrovalFile = ymlInputs["Approval_File"]
+    jsonequationFile = ymlInputs["Debug_Json_File"]
+    FinalJson = ymlInputs["OutPut_Folder"] + "\\ADTL_Equations.adtl.json"
+    logFile = ymlInputs["OutPut_Folder"] + "\\LogApprovalToJson.txt"
+    Copy_Pre_To_Post = ymlInputs["Copy_Pre_To_Post"]
 
     dataApproval= ReadcsvData(csvAprrovalFile)
     dataJson = ReadjsonData(jsonequationFile)
     allTestInstances=AllTestInstances(dataJson)
 
+    logFileObject = open(logFile, 'a')
+    logFileObject.write("\nCreating json from Approval\n")
+
     with open (FinalJson, 'w') as file:
         file.write("[")
-        MapJsontoApproval(dataApproval, dataJson, file, allTestInstances)
+        MapJsontoApproval(dataApproval, dataJson, file, allTestInstances, logFileObject, Copy_Pre_To_Post)
         file.seek(file.tell() - 1, os.SEEK_SET)
         file.write("]")
 

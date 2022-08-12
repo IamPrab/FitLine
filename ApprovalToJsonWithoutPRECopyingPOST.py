@@ -1,6 +1,7 @@
 import json
 import os
-
+import argparse
+import yaml
 import pandas as pd
 
 class ApprovalData:
@@ -61,13 +62,15 @@ def AllTestInstances(datajson):
 
 
 
-def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
-    c=0
+def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances, logFile):
+    Approved=0
+    total=0
 
     for i in dataJson:
         SourceTestName = i['SourceTestName']
 
         if SourceTestName in dataApproval:
+            total = total + 1
             Flow = dataApproval[SourceTestName][0]
             SlopeA =  float(dataApproval[SourceTestName][1])
             InterceptA = float(dataApproval[SourceTestName][2])
@@ -75,7 +78,8 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
             RootMeanSquareErrorA= float(dataApproval[SourceTestName][4])
             Approval = dataApproval[SourceTestName][5]
 
-            if Approval=='Y' or Approval=='Yes' or Approval == 'yes' or Approval=='y':
+            if Approval=='Y' or Approval=='Yes' or Approval == 'yes' or Approval=='y' or Approval=='YES':
+                Approved = Approved + 1
                 result1 = {"ResultVarName": i['ResultVarName'],
                             "PerDomainEquations": i['PerDomainEquations'],
                             "EquaionName": i["EquaionName"],
@@ -105,21 +109,41 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances):
             Approval =  dataApproval[key][5]
             if Approval == 'Y' or Approval == 'Yes' or Approval == 'yes' or Approval == 'y':
                 print('Equation missing in json', key)
-    print(c)
+
+    print(Approved)
+    logFile.write("\nApproved Equations  : "+ str(Approved) +'\n')
+    print(total)
+    logFile.write("Total Equation in Approval File excluding MultiCore  : " + str(total) + '\n')
 
 
 if __name__ == '__main__':
-    csvAprrovalFile = "C:\\Users\\kaurp\\Downloads\\exp.xlsx"
-    jsonequationFile = "\\\\pjwade-desk.ger.corp.intel.com\\AXEL_ADTL_REPORTS\\RPL_8PQF_RPL8161\\QS_New_Algorithm\\ADTL_Equations_Final.adtl.json"
-    FinalJson = "C:\\Users\\kaurp\\Downloads\\AfterApprovalfileJson.xlsx"
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('ymlFile', help="YML_FILE")
+
+    args = parser.parse_args()
+
+    inputs = args.ymlFile
+
+    with open(inputs) as file:
+        ymlInputs=yaml.load(file,Loader=yaml.FullLoader)
+
+    csvAprrovalFile = ymlInputs["Approval_File"]
+    jsonequationFile = ymlInputs["Debug_Json_File"]
+    FinalJson = ymlInputs["OutPut_Folder"] + "\\ADTL_Equations.adtl.json"
+    logFile = ymlInputs["OutPut_Folder"] + "\\LogApprovalToJson.txt"
 
     dataApproval= ReadcsvData(csvAprrovalFile)
     dataJson = ReadjsonData(jsonequationFile)
     allTestInstances=AllTestInstances(dataJson)
 
+
+    logFileObject = open(logFile, 'a')
+    logFileObject.write("\nCreating json from Approval\n")
+
     with open (FinalJson, 'w') as file:
         file.write("[")
-        MapJsontoApproval(dataApproval, dataJson, file, allTestInstances)
+        MapJsontoApproval(dataApproval, dataJson, file, allTestInstances, logFileObject)
         file.seek(file.tell() - 1, os.SEEK_SET)
         file.write("]")
 

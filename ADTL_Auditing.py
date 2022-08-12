@@ -2,6 +2,7 @@ import re
 from typing import NamedTuple
 import os.path
 import json
+import csv
 
 
 class Escape_Results:
@@ -314,7 +315,6 @@ def count_escapes(fmCat):
 
 
 def red_alert(fmCat, file):
-    escapeFlag = False
     reds = {}
     Not_tested = {}
     for key in fmCat:
@@ -323,45 +323,12 @@ def red_alert(fmCat, file):
         for dye in fmCat[key]:
             if (dye.delta < 0 or dye.testStatus == "NOT_TESTED"):
                 if (dye.delta < 0 and dye.bin < 3):
-                    escapeFlag = True
                     reds[key] = reds[key] + 1
-                    escapes1 = Escape_Results()
-                    escapes1.Lot = dye.lot
-                    escapes1.Wafer = dye.wafer
-                    escapes1.X = dye.X
-                    escapes1.Y = dye.Y
-                    escapes1.Module_Name = dye.modulename
-                    escapes1.Test_Name = dye.testname
-                    escapes1.Bin = dye.bin
-                    escapes1.Delta = dye.delta
-                    escapes1.Status = dye.status
-                    escapes1.ADTL_String = dye.resultstring
-                    escapes1.escapeType = dye.testStatus
-
-                    json_string = json.dumps(escapes1, default=lambda o: o.__dict__, sort_keys=True, indent=2)
-                    file.write(json_string)
-                    file.write(',')
+                    file.writerow([dye.modulename, dye.testname, dye.lot, dye.wafer, dye.x, dye.y, dye.bin, dye.resultstring])
 
                 elif dye.testStatus == "NOT_TESTED":
                     Not_tested[key] = Not_tested[key] + 1
 
-    if escapeFlag == False:
-        escapes1 = Escape_Results()
-        escapes1.Lot = 'Null'
-        escapes1.Wafer = 'Null'
-        escapes1.X = 'Null'
-        escapes1.Y = 'Null'
-        escapes1.Module_Name = 'Null'
-        escapes1.Test_Name = 'Null'
-        escapes1.Bin = 'Null'
-        escapes1.Delta = 'Null'
-        escapes1.Status = 'Null'
-        escapes1.ADTL_String = 'Null'
-        escapes1.escapeType = 'Null'
-
-        json_string = json.dumps(escapes1, default=lambda o: o.__dict__, sort_keys=True, indent=2)
-        file.write(json_string)
-        file.write(',')
 
     # print(reds)
     return [reds, Not_tested]
@@ -466,9 +433,10 @@ def result_file2(file, fm_module_cat, escapes, reds, Not_tested):
         result1.HFM_Not_Tested = HFM_Not_Tested[key]
         result1.Unknown_Not_Tested = Unk_Not_Tested[key]
 
-        json_string = json.dumps(result1, default=lambda o: o.__dict__, sort_keys=True, indent=2)
-        file.write(json_string)
-        file.write(',')
+        file.writerow([tp_id,result1.ModuleName, result1.LFM_Count, result1.HFM_Count, result1.TFM_Count, result1.Unknown_Count, result1.LFM_Kill_Count, result1.HFM_Kill_Count,
+                       result1.TFM_Kill_Count, result1.Unknown_Kill_Count, result1.LFM_Escape_Count,result1.HFM_Escape_Count, result1.TFM_Escape_Count, result1.Unknown_Escape_Count,
+                       result1.LFM_Not_Tested, result1.HFM_Not_Tested, result1.TFM_Not_Tested, result1.Unknown_Not_Tested])
+
 
 
 def file_check(path):
@@ -521,30 +489,32 @@ def summary_check(path):
 
 
 def main(args1, args2):
-    outPath = args2 + '/Summary.json'
-    outPathEscapes = args2 + '/Escapes.json'
-    outPathEquationStat = args2 + '/EquationStats.json'
+    outPath = args2 + '/Summary.csv'
+    outPathEscapes = args2 + '/Escapes.csv'
+    #outPathEquationStat = args2 + '/EquationStats.csv'
     filePath = args1
 
     blocks = read_data(filePath)
     eqStat = equationStats(blocks)
     fm_module_cat = cout_FmModuleStatus(blocks)
     escapes = count_escapes(blocks)
-    with open(outPathEscapes, 'w') as file:
-        file.write("[")
-        reds = red_alert(blocks, file)
-        file.seek(file.tell() - 1, os.SEEK_SET)
-        file.write("]")
-    with open(outPath, 'w') as file2:
-        file2.write("[")
-        result_file2(file2, fm_module_cat, escapes, reds[0], reds[1])
-        file2.seek(file2.tell() - 1, os.SEEK_SET)
-        file2.write("]")
-    with open(outPathEquationStat, 'w') as file:
-        file.write("[")
-        resultEquationStat(eqStat[0], eqStat[1], eqStat[2], file)
-        file.seek(file.tell() - 1, os.SEEK_SET)
-        file.write("]")
+    with open(outPathEscapes, 'w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["ModuleName", "TestName", "Lot", "Wafer", "X", "Y", "Bin", "Delta", "ADTLString"])
+        reds = red_alert(blocks, writer)
+
+    with open(outPath, 'w', newline='') as file2:
+        writer = csv.writer(file2)
+        writer.writerow(["TP","ModuleName", "LFM_Count", "HFM_Count", "TFM_Count", "Unknown_Count", "LFM_Kill_Count", "HFM_Kill_Count",
+                       "TFM_Kill_Count", "Unknown_Kill_Count", "LFM_Escape_Count","HFM_Escape_Count", "TFM_Escape_Count", "Unknown_Escape_Count",
+                       "LFM_Not_Tested", "HFM_Not_Tested", "TFM_Not_Tested", "Unknown_Not_Tested"])
+        result_file2(writer, fm_module_cat, escapes, reds[0], reds[1])
+
+    # with open(outPathEquationStat, 'w') as file:
+    #     file.write("[")
+    #     resultEquationStat(eqStat[0], eqStat[1], eqStat[2], file)
+    #     file.seek(file.tell() - 1, os.SEEK_SET)
+    #     file.write("]")
 
     summary_check(outPath)
     file_check(outPathEscapes)

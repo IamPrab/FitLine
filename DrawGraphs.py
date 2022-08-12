@@ -121,7 +121,7 @@ def main(args1, args2, args3):
 
     datafiles = os.listdir(path)
     for datafile in datafiles:
-        print(datafile)
-        filepath = os.path.join(path, datafile)
-        MasterData=ReadData(filepath)
-        GetGraphs(MasterData,out_Path,sigma)
+            print(datafile)
+            filepath = os.path.join(path, datafile)
+            MasterData=ReadData(filepath)
+            GetGraphs(MasterData,out_Path,sigma)
