@@ -219,9 +219,10 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count):
         xyMulticore = []
         for val in tests['Data']:
             IDVName = val['XName']
-            if (float(val['YValue']) > 0):
-                x.append(float(val['XValue']))
-                y.append(float(val['YValue']))
+            if float(val['YValue']) > 0:
+                if float(val['XValue']) > 6000 and float(val['XValue']) < 18000:
+                    x.append(float(val['XValue']))
+                    y.append(float(val['YValue']))
             if fullName != val['YName']:
                 xyMulticore.append(val['YName'] + "%" + str(val['XValue']) + "%" + str(val['YValue']))
 

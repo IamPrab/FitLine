@@ -38,6 +38,7 @@ def GetGraphs(MasterData,outPath,sigma):
             plt.plot(x,y, 'g.')
 
             plt.plot(x, b + m * x, 'b-')
+            sigma = 10
 
             linePoints = getLinePoints(x, y, b, m)
             MSE = np.square(np.subtract(y,linePoints)).mean()
@@ -105,9 +106,10 @@ def ReadData(path):
         x=[]
         y=[]
         for val in tests['Data']:
-            if (float(val['YValue'])>0):
-                x.append(float(val['XValue']))
-                y.append(float(val['YValue']))
+            if float(val['YValue'])>0:
+                if float(val['XValue']) > 6000 and float(val['XValue']) < 18000:
+                    x.append(float(val['XValue']))
+                    y.append(float(val['YValue']))
 
         MasterData[fullName]=[x,y]
     return MasterData
@@ -120,8 +122,10 @@ def main(args1, args2, args3):
     sigma = args3
 
     datafiles = os.listdir(path)
+
+
     for datafile in datafiles:
-            print(datafile)
-            filepath = os.path.join(path, datafile)
-            MasterData=ReadData(filepath)
-            GetGraphs(MasterData,out_Path,sigma)
+        print(datafile)
+        filepath = os.path.join(path, datafile)
+        MasterData=ReadData(filepath)
+        GetGraphs(MasterData,out_Path,sigma)
