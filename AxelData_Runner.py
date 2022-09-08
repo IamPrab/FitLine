@@ -12,13 +12,13 @@ parser.add_argument('operation', help="FitLine/AuditADTL/DrawGraphs/Structural_A
 parser.add_argument('input',help="inputFile")
 parser.add_argument('output',help="outputFile")
 parser.add_argument('sigma',help="sigma")
-parser.add_argument('auditInputFile', help = "auditInputfile")
+parser.add_argument('additionalInputFile', help = "AdditionalInpulFile")
 
 
 args = parser.parse_args()
 
 if args.operation == 'FitLine':
-    FitLineMulticore.main(args.input,args.output,args.sigma)
+    FitLineMulticore.main(args.input,args.output,args.sigma, args.additionalInputFile)
     print('FitLine Success')
 
 if args.operation == 'AuditADTL':
@@ -26,9 +26,9 @@ if args.operation == 'AuditADTL':
     print('Audit Success')
 
 if args.operation == 'DrawGraphs':
-    DrawGraphs.main(args.input,args.output,args.sigma)
+    DrawGraphs.main(args.input,args.output,args.sigma, args.additionalInputFile)
     print('Graphs Success')
 
 if args.operation == 'Structural_Audit':
-    Structural_Audit.main(args.input, args.output, args.auditInputFile)
+    Structural_Audit.main(args.input, args.output, args.additionalInputFile)
     print('Structural Audit Done')

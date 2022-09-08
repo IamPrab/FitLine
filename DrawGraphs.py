@@ -18,7 +18,7 @@ def getLinePoints(x, y, b, m):
         c = c + 1
     return linePoints
 
-def GetGraphs(MasterData,outPath,sigma):
+def GetGraphs(MasterData,outPath,sigma,oldEquations):
     results_dir = os.path.join(outPath + '/GraphData')
     if not os.path.exists(results_dir):
         os.mkdir(results_dir)
@@ -81,6 +81,12 @@ def GetGraphs(MasterData,outPath,sigma):
 
             kill_offset= sigma_Val1 + b
             plt.plot(x, kill_offset + m * x, 'k-', label = "Sigma 12")
+
+            if key in oldEquations:
+                slope = oldEquations[key][0]
+                intercept= oldEquations[key][1]
+                plt.plot(x, intercept + slope * x, 'm-', label = "Previous Equation")
+
             plt.title(key)
             legend = plt.legend()
 
@@ -114,18 +120,39 @@ def ReadData(path):
         MasterData[fullName]=[x,y]
     return MasterData
 
+def GetOldEquations(goldenJsonFile):
+    with open(goldenJsonFile) as data:
+        d = json.load(data)
+        data.close()
+
+    oldEquations={}
+
+    for i in d:
+        testInstance = i["SourceTestName"]
+
+        if testInstance not in oldEquations:
+            oldEquations[testInstance] = [i["Slope"], i["Intercept"]]
+
+    return oldEquations
 
 
-def main(args1, args2, args3):
+def main(args1, args2, args3, args4):
     path = args1
     out_Path = args2
     sigma = args3
+    goldenJsonFile = args4
 
     datafiles = os.listdir(path)
+
+    if goldenJsonFile == "blank":
+        oldEquations = {}
+    else:
+        oldEquations = GetOldEquations(goldenJsonFile)
+    # print(oldEquations)
 
 
     for datafile in datafiles:
         print(datafile)
         filepath = os.path.join(path, datafile)
         MasterData=ReadData(filepath)
-        GetGraphs(MasterData,out_Path,sigma)
+        GetGraphs(MasterData,out_Path,sigma, oldEquations)

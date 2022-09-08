@@ -204,7 +204,7 @@ def DiePerWaferCount(out_Path, kills):
     return  dpw
 
 
-def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count):
+def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count, oldEquations):
     with open(path) as data:
         d = json.load(data)
         data.close()
@@ -292,13 +292,25 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count):
 
         DPW = DiePerWaferCount(out_Path, killRate)
 
+        testInstance = result1['SourceTestName']
+
+        status= " "
+        if testInstance in oldEquations:
+            status = "ADTL Implemented in Previous Test Program"
+            oldEquations[testInstance] = "Freed"
+
         rowData1 = [moduleName ,result1['SourceTestName'],frequency,flow, result1['Slope'],intercept_0, result1['Intercept'], DPW,
-                    result1['RootMeanSquareError'],selcted_sigma,int(sigma),Sigma_offset, str(result1['PopulationStatistics']), ' ',' ', 'MainCore']
+                    result1['RootMeanSquareError'],selcted_sigma,int(sigma),Sigma_offset,' ', str(result1['PopulationStatistics']),status,' ',' ', 'MainCore']
         if (result1['Intercept']!=0):
             worksheet.write_row(count, 0, rowData1)
             graphLinq=GetGraphName(resultdir, result1['SourceTestName'])
-            worksheet.write_url(count,16,graphLinq)
+            worksheet.write_url(count,18,graphLinq)
             count = count + 1
+
+        # for key in oldEquations:
+        #     if oldEquations[key] != "Freed":
+        #         rowData2 = [key]
+        #         worksheet.write_row
 
         json_string = json.dumps(result1, default=lambda o: o.__dict__, sort_keys=True, indent=2)
         resulant.write(json_string)
@@ -307,22 +319,45 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count):
 
     return count
 
+def GetOldEquations(goldenJsonFile):
+    with open(goldenJsonFile) as data:
+        d = json.load(data)
+        data.close()
 
-def main(args1, args2, args3):
+    oldEquations={}
+
+    for i in d:
+        testInstance = i["SourceTestName"]
+
+        if testInstance not in oldEquations:
+            oldEquations[testInstance] = i
+
+    return oldEquations
+
+
+def main(args1, args2, args3, args4):
     path = args1
     out_Path = args2
     sigma = args3
+    goldenJsonFile = args4
     outPath = out_Path + '\\equations.json'
     OutFinalCSVPath = out_Path + '\\ApprovalFile.xlsx'
 
     workbook = xlsxwriter.Workbook(OutFinalCSVPath)
     worksheet = workbook.add_worksheet()
 
+    if goldenJsonFile== "blank":
+        oldEquations={}
+    else:
+        oldEquations= GetOldEquations(goldenJsonFile)
+    #print(oldEquations)
+
+
     datafiles = os.listdir(path)
     with open(outPath, 'w') as file:
         header = ['Module Name','TestName', 'Frequency', 'Flow', 'Slope', 'Intercept_0', 'Intercept', 'DPW',
-                  'RootMeanSquareError', 'Selected Sigma', 'Sigma Multiple', 'Calculated_Offset ',
-                  'PopulationStatistics', 'Approval', 'Comment', 'MultiCore/MainCore',
+                  'RootMeanSquareError', 'Selected Sigma', 'Sigma Multiple', 'Calculated_Offset', 'Overide sigma Multiple value',
+                  'PopulationStatistics', 'Status', 'Approval', 'Comment', 'MultiCore/MainCore',
                   'Graph']
         worksheet.write_row(0, 0, header)
         file.write("[")
@@ -330,7 +365,7 @@ def main(args1, args2, args3):
         for datafile in datafiles:
             print(datafile)
             filepath = os.path.join(path, datafile)
-            count = FitLineFactory(filepath, file, worksheet, out_Path, sigma, count)
+            count = FitLineFactory(filepath, file, worksheet, out_Path, sigma, count, oldEquations)
             print(count)
         file.seek(file.tell() - 1, os.SEEK_SET)
         file.write("]")
