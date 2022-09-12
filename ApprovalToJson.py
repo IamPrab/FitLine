@@ -229,7 +229,10 @@ if __name__ == '__main__':
     Copy_Pre_To_Post = ymlInputs["Copy_Pre_To_Post"]
     goldenJsonFile = ymlInputs["Golden Json File inside previous TestProgram"]
 
-    oldEquations = GetOldEquations(goldenJsonFile)
+    if goldenJsonFile == "":
+        oldEquations = {}
+    else:
+        oldEquations = GetOldEquations(goldenJsonFile)
 
     dataApproval= ReadcsvData(csvAprrovalFile)
     dataJson = ReadjsonData(jsonequationFile)

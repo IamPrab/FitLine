@@ -220,7 +220,7 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count, oldEquatio
         for val in tests['Data']:
             IDVName = val['XName']
             if float(val['YValue']) > 0:
-                if float(val['XValue']) > 6000 and float(val['XValue']) < 18000:
+                if float(val['XValue']) > 2000 and float(val['XValue']) < 18000:
                     x.append(float(val['XValue']))
                     y.append(float(val['YValue']))
             if fullName != val['YName']:
