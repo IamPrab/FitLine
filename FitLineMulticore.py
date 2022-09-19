@@ -10,6 +10,8 @@ from os import path
 import matplotlib.pyplot as plt
 
 
+killdies=[]
+
 def distributionStatistic(x, y, b, m):
     c = 0
     max = 0
@@ -39,7 +41,7 @@ def distributionStatistic(x, y, b, m):
     return arrStats
 
 
-def kill_points(x, y, b, m):
+def kill_points(x, y, b, m, uniqueID):
     passBucketY = []
     killBucketY = []
 
@@ -48,10 +50,12 @@ def kill_points(x, y, b, m):
         kill_line =  b + (m * x[count])
         if y[count] >= kill_line:
             killBucketY.append(y[count])
+            kills = uniqueID[count] + ":   " + str(x[count]) + " "+ str(y[count])
+            killdies.append(kills)
         else:
             passBucketY.append(y[count])
         count = count + 1
-    passToKillBucket = [ passBucketY,  killBucketY]
+    passToKillBucket = [passBucketY,  killBucketY]
 
     return passToKillBucket
 
@@ -66,7 +70,7 @@ def getLinePoints(x, y, b, m):
     return linePoints
 
 
-def RunFitLine(xy, testName, Flagmulticore,sigma):
+def RunFitLine(xy, testName, Flagmulticore,sigma, uniqueID):
     x = xy[0]
     y = xy[1]
     if (len(x) > 100):
@@ -98,8 +102,7 @@ def RunFitLine(xy, testName, Flagmulticore,sigma):
             selcted_sigma = RMSE
             sigma_Val_Offset = (RMSE) * float(sigma)
         #print(len(y))
-        passToKillBucket = kill_points(x, y, b_sigma, m)
-
+        passToKillBucket = kill_points(x, y, b_sigma, m, uniqueID)
         killBucketY = passToKillBucket[1]
         killToPassRatio = len(killBucketY)
 
@@ -122,13 +125,13 @@ def RunFitLine(xy, testName, Flagmulticore,sigma):
     return equation
 
 
-def SingltonFit(x, y, testName,sigma):
+def SingltonFit(x, y, testName,sigma, uniqueID):
     x = np.array(x)
     y = np.array(y)
 
     xy = [x, y]
     Flagmulticore = False
-    equation = RunFitLine(xy, testName, Flagmulticore,sigma)
+    equation = RunFitLine(xy, testName, Flagmulticore,sigma, uniqueID)
     return equation
 
 
@@ -216,6 +219,7 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count, oldEquatio
         vminTestName = fullName.split('::')[0]
         x = []
         y = []
+        uniqueId = []
         xyMulticore = []
         for val in tests['Data']:
             IDVName = val['XName']
@@ -223,10 +227,11 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count, oldEquatio
                 if float(val['XValue']) > 2000 and float(val['XValue']) < 18000:
                     x.append(float(val['XValue']))
                     y.append(float(val['YValue']))
+                    uniqueId.append(val['UniqueID'])
             if fullName != val['YName']:
                 xyMulticore.append(val['YName'] + "%" + str(val['XValue']) + "%" + str(val['YValue']))
 
-        equation = SingltonFit(x, y, fullName,sigma)
+        equation = SingltonFit(x, y, fullName,sigma, uniqueId)
         intercept = equation[0]
         slope = equation[1]
         populationStats = equation[2].tolist()
@@ -334,6 +339,34 @@ def GetOldEquations(goldenJsonFile):
 
     return oldEquations
 
+def CalculateOverallDPW(out_Path):
+    fileName= out_Path + "\\Kills.txt"
+
+    uniqueKills = {}
+    with open(fileName,'w') as file:
+        file.write('All Killed Dies \nX%Y%Wafer%Lot%IBin   IDV VMIN\n')
+        for kill in killdies:
+            file.write(f"{kill}\n")
+            key = kill.split(":")[0]
+
+            if key not in uniqueKills:
+                uniqueKills[key] = True
+        file.write("\nUNIQUE KILLS")
+        for key in uniqueKills:
+            file.write(key+"\n")
+
+    uniKills= len(uniqueKills)
+    dpw = uniKills/1
+    wafersList = out_Path + '/WaferList.txt'
+
+    if path.isfile(wafersList):
+        num_lines = sum(1 for line in open(wafersList))
+        dpw = uniKills / num_lines
+    print(dpw)
+
+    return dpw
+
+
 
 def main(args1, args2, args3, args4):
     path = args1
@@ -369,6 +402,11 @@ def main(args1, args2, args3, args4):
             print(count)
         file.seek(file.tell() - 1, os.SEEK_SET)
         file.write("]")
+
+        dpw = CalculateOverallDPW(out_Path)
+        rowData = ["DPW overall", str(dpw)]
+        worksheet.write_row(count, 0, rowData)
+
         workbook.close()
 
 

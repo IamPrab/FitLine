@@ -92,6 +92,7 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances, logFile
             if (Approval=='Y' or Approval=='Yes' or Approval == 'yes' or Approval=='y' or Approval=='YES'):
                 if Overidesigma != ' ':
                     InterceptA = Intercept0 + float(Overidesigma)*float(SelectedSigmaA)
+                    Sigmaa=Overidesigma
                 Approved = Approved+1
                 result1 = {"ResultVarName": i['ResultVarName'],
                             "PerDomainEquations": i['PerDomainEquations'],
