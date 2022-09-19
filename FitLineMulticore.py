@@ -163,14 +163,14 @@ def MultiCoreData(xyMulticore):
     return IDV_Vmin_Dict
 
 
-def MulticoreFit(xyMulticore, sigma):
+def MulticoreFit(xyMulticore, sigma, uniqueId):
     multicoreEquations = {}
 
     multicoreData = MultiCoreData(xyMulticore)
 
     for cores in multicoreData:
         Flagmulticore = True
-        equation = RunFitLine(multicoreData[cores], cores, Flagmulticore, sigma)
+        equation = RunFitLine(multicoreData[cores], cores, Flagmulticore, sigma, uniqueId)
         multicoreEquations[cores] = equation
 
     return multicoreEquations
@@ -243,7 +243,7 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count, oldEquatio
 
         coreResults = []
 
-        multicoreeqations = MulticoreFit(xyMulticore,sigma)
+        multicoreeqations = MulticoreFit(xyMulticore,sigma, uniqueId)
         resultdir = os.path.join(out_Path + '/GraphData')
         for core in multicoreeqations:
             res = GetJsonObForMulticore(multicoreeqations[core], core, IDVName)
