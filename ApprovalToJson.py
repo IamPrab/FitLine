@@ -29,7 +29,7 @@ def ReadcsvData(csvAprrovalFile):
     while(count<length):
         if data['TestName'][count] not in dict_data:
             stuff = [ data['Flow'][count], float(data['Slope'][count]),float(data['Intercept_0'][count]),float(data['Intercept'][count]),float(data['Selected Sigma'][count]),
-                      data['Sigma Multiple'][count], float(data['Calculated_Offset'][count]),data['Overide sigma Multiple value'][count], float(data['RootMeanSquareError'][count]), data['Approval'][count],
+                      data['Sigma Multiple'][count], float(data['Calculated_Offset'][count]),(data['Overide sigma Multiple value'][count]), float(data['RootMeanSquareError'][count]), data['Approval'][count],
                       data['MultiCore/MainCore'][count]]
             dict_data[data['TestName'][count]] = stuff
         else:
@@ -85,15 +85,18 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances, logFile
             SelectedSigmaA = float(dataApproval[SourceTestName][4])
             Sigmaa = dataApproval[SourceTestName][5]
             CalculatedOffset = float(dataApproval[SourceTestName][6])
-            Overidesigma = dataApproval[SourceTestName][7]
+            Overidesigma = (dataApproval[SourceTestName][7])
             RootMeanSquareErrorA= float(dataApproval[SourceTestName][8])
             Approval = dataApproval[SourceTestName][9]
 
             if (Approval=='Y' or Approval=='Yes' or Approval == 'yes' or Approval=='y' or Approval=='YES'):
-                if Overidesigma != ' ':
+                #print(InterceptA,Intercept0,Overidesigma,SelectedSigmaA)
+                if Overidesigma != ' ' and Overidesigma > 0:
                     InterceptA = Intercept0 + float(Overidesigma)*float(SelectedSigmaA)
                     Sigmaa=Overidesigma
                 Approved = Approved+1
+                #print (InterceptA)
+
                 result1 = {"ResultVarName": i['ResultVarName'],
                             "PerDomainEquations": i['PerDomainEquations'],
                             "EquaionName": i["EquaionName"],
@@ -108,8 +111,11 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances, logFile
                             "RootMeanSquareError": RootMeanSquareErrorA,
                             "KillRate": 'NA',
                             "PopulationStatistics": i["PopulationStatistics"],
-                            "ResultVar": i["ResultVar"]
+                            "ResultVar": i["ResultVar"],
+                            "VminPredOffset" : i["VminPredOffset"],
+                            "Intercept_0" : i["Intercept_0"]
                 }
+                #print (result1)
 
                 json_string = json.dumps(result1, default=lambda o: o.__dict__, sort_keys=True, indent=2)
                 resulant.write(json_string)
@@ -136,8 +142,11 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances, logFile
                                    "RootMeanSquareError": RootMeanSquareErrorA,
                                    "KillRate": 'NA',
                                    "PopulationStatistics": i["PopulationStatistics"],
-                                   "ResultVar": i["ResultVar"]
+                                   "ResultVar": i["ResultVar"],
+                                   "VminPredOffset": i["VminPredOffset"],
+                                   "Intercept_0": i["Intercept_0"]
                                    }
+                        #print(result1)
                         json_string = json.dumps(result1, default=lambda o: o.__dict__, sort_keys=True, indent=2)
                         resulant.write(json_string)
                         resulant.write(',')
@@ -151,6 +160,18 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances, logFile
             if Approval == 'OLD':
                 old=old+1
                 result2 = oldEquations[SourceTestName]
+                # if Overidesigma != ' ' and Overidesigma>0:
+                #     result2['Intercept']=result2['Intercept'] - 0.03
+                #     print(result2['Intercept'])
+                #     result2['Vmin_Sigma'] = "VMIN_Sigma7.5"
+                #     print(result2)
+
+                result2['VminPredOffset'] = "not calculated previous tp"
+                result2['Intercept_0'] = "Not available previous TP"
+                result2['PopulationStatistics'] = "null"
+
+
+
                 json_string = json.dumps(result2, default=lambda o: o.__dict__, sort_keys=True, indent=2)
                 resulant.write(json_string)
                 resulant.write(',')
@@ -160,7 +181,7 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances, logFile
                     postInstance1 = SourceTestName.replace("PREHVQK", "POSTHVQK")
                     if postInstance1 in oldEquations:
                         oldpost = oldpost + 1
-                        result2 = oldEquations[SourceTestName]
+                        result2 = oldEquations[postInstance1]
                         json_string = json.dumps(result2, default=lambda o: o.__dict__, sort_keys=True, indent=2)
                         resulant.write(json_string)
                         resulant.write(',')
@@ -228,7 +249,7 @@ if __name__ == '__main__':
     FinalJson = ymlInputs["OutPut_Folder"] + "\\ADTL_Equations.adtl.json"
     logFile = ymlInputs["OutPut_Folder"] + "\\LogApprovalToJson.txt"
     Copy_Pre_To_Post = ymlInputs["Copy_Pre_To_Post"]
-    goldenJsonFile = ymlInputs["Golden Json File inside previous TestProgram"]
+    goldenJsonFile = ymlInputs["Previous_Golden_Json_File"]
 
     if goldenJsonFile == "":
         oldEquations = {}

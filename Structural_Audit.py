@@ -102,6 +102,7 @@ def CompareEquationsInJsonAndTester_SlopeAndIntcept(testerData, adtlData, outSCV
     outSCV.writerow([" "])
     outSCV.writerow(["Test with Different Slope and Intercept"])
     outSCV.writerow(["Test", "Slope in json", "Slope in DataBase", "Intercept in json", "Intercept in DataBase"])
+
     for test in testerData:
         if test in adtlData:
             if testerData[test][0] == adtlData[test][0] and testerData[test][1] == adtlData[test][1]:
@@ -109,6 +110,8 @@ def CompareEquationsInJsonAndTester_SlopeAndIntcept(testerData, adtlData, outSCV
             else:
                 #print("for", test, "slope and intercept are different. In JSON" ,testerData[test], "In Database", adtlData[test])
                 outSCV.writerow([test, testerData[test][1] , adtlData[test][1], testerData[test][0], adtlData[test][0]])
+
+
 
 
 def main(args1, args2, args3):
@@ -132,6 +135,11 @@ def main(args1, args2, args3):
         writer.writerow(([ "No of Equations in Database:", len(adtlData)]))
         CompareEquationsInJsonAndTester_SlopeAndIntcept(testerData, adtlData, writer)
         CompareEquationsInJsonAndTester_TestInstance(testerData, adtlData, writer)
+        writer.writerow([" "])
+        writer.writerow(["All equations inside Database", "Intercept", "Slope"])
+        for i in adtlData:
+            writer.writerow ([i,adtlData[i][0],adtlData[i][1]])
+
 
 
 

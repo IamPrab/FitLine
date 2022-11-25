@@ -108,7 +108,8 @@ def post_resultstring(name):  #
     offset = 0  # default# VMIN_OFFSET_004 VMIN_EDC??, UNDEFINED??
     flag = False
     tested_status = "ADTL_FAIL_NOT_BINNED"
-    if len(values) == 8 and name.find('NA') < 0:
+    if len(values) == 8 and name.find('NA') < 0 and name.find('NULL') < 0:
+
         flag = True
         not_set = -100000
         X = not_set
@@ -158,10 +159,12 @@ def post_resultstring(name):  #
         not_set = -100000
         X = not_set
         Y = not_set
+        print(values)
         if float(values[0]) > 100:
             X = float(values[0])
         elif float(values[1]) > 100:
             X = float(values[1])
+
 
         if (0 < float(values[0]) < 2) or (float(values[0]) < -500):
             Y = float(values[0])
@@ -324,7 +327,7 @@ def red_alert(fmCat, file):
             if (dye.delta < 0 or dye.testStatus == "NOT_TESTED"):
                 if (dye.delta < 0 and dye.bin < 3):
                     reds[key] = reds[key] + 1
-                    file.writerow([dye.modulename, dye.testname, dye.lot, dye.wafer, dye.x, dye.y, dye.bin, dye.resultstring])
+                    file.writerow([dye.modulename, dye.testname, dye.lot, dye.wafer, dye.bin, dye.resultstring])
 
                 elif dye.testStatus == "NOT_TESTED":
                     Not_tested[key] = Not_tested[key] + 1
@@ -500,7 +503,7 @@ def main(args1, args2):
     escapes = count_escapes(blocks)
     with open(outPathEscapes, 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(["ModuleName", "TestName", "Lot", "Wafer", "X", "Y", "Bin", "Delta", "ADTLString"])
+        writer.writerow(["ModuleName", "TestName", "Lot", "Wafer", "Bin", "ADTLString"])
         reds = red_alert(blocks, writer)
 
     with open(outPath, 'w', newline='') as file2:
