@@ -168,7 +168,7 @@ def MapJsontoApproval(dataApproval, dataJson,resulant, allTestInstances, logFile
 
                 result2['VminPredOffset'] = "not calculated previous tp"
                 result2['Intercept_0'] = "Not available previous TP"
-                result2['PopulationStatistics'] = "null"
+                result2['PopulationStatistics'] = None
 
 
 

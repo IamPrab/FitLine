@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 
 killdies=[]
+vmincount={}
 
 def distributionStatistic(x, y, b, m):
     c = 0
@@ -96,8 +97,10 @@ def getLinePoints(x, y, b, m):
 
 
 def RunFitLine(xy, testName, Flagmulticore,sigma, uniqueID):
+
     x = xy[0]
     y = xy[1]
+    vmincount[testName]=len(y)
     if (len(x) > 100):
         b, m = polyfit(x, y, 1)
         if m>0:
@@ -260,7 +263,7 @@ def FitLineFactory(path, resulant, worksheet, out_Path, sigma, count, oldEquatio
         for val in tests['Data']:
             IDVName = val['XName']
             if float(val['YValue']) > 0:
-                if float(val['XValue']) > 2000 and float(val['XValue']) < 18000:
+                if 2000 < float(val['XValue']) < 18000 and 0 < float(val['YValue']) < 3.0:
                     x.append(float(val['XValue']))
                     y.append(float(val['YValue']))
                     uniqueId.append(val['UniqueID'])
@@ -490,5 +493,5 @@ def main(args1, args2, args3, args4):
         worksheet.write_row(count, 0, rowData)
 
         workbook.close()
-
+        print(vmincount)
 

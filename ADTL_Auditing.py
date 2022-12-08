@@ -103,6 +103,7 @@ def post_testname(testname):  # extract information from testname
 
 
 def post_resultstring(name):  #
+    print(name)
     values = name.split('|')
     delta = 0
     offset = 0  # default# VMIN_OFFSET_004 VMIN_EDC??, UNDEFINED??

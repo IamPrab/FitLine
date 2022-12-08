@@ -8,6 +8,7 @@ import os
 import gc
 import matplotlib.colors as mcolors
 
+testcount={}
 
 def getLinePoints(x, y, b, m):
     c = 0
@@ -151,12 +152,13 @@ def ReadData(path):
         uniqueId = []
         for val in tests['Data']:
             if float(val['YValue'])>0:
-                if float(val['XValue']) > 2000 and float(val['XValue']) < 18000:
+                if 2000 < float(val['XValue']) < 18000 and 0 < float(val['YValue']) < 3.0:
                     x.append(float(val['XValue']))
                     y.append(float(val['YValue']))
                     uniqueId.append(val['UniqueID'].split("%")[4])
 
         MasterData[fullName]=[x,y,uniqueId]
+        testcount[fullName]=len(y)
     return MasterData
 
 def GetOldEquations(goldenJsonFile):
@@ -214,3 +216,7 @@ def main(args1, args2, args3, args4):
         filepath = os.path.join(path, datafile)
         MasterData=ReadData(filepath)
         GetGraphs(MasterData,out_Path,sigma, oldEquations, eqnsVminPred)
+
+    #for test in testcount:
+        #print(test)
+        #print(testcount[test])
